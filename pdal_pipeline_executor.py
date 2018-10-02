@@ -27,8 +27,10 @@ __copyright__ = '(C) 2018, Luigi Pirelli'
 import os
 import sys
 import signal
+import select
 import subprocess
 import gdal
+import json
 # import pdal # cannot import pdal because mosto stable versions just use python-pdal for py2
 from PyQt5.QtCore import QCoreApplication
 from qgis.core import (QgsProcessing,
@@ -40,6 +42,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterFileDestination,
                        QgsProcessingParameterString,
                        QgsApplication)
+import processing
 
 
 class PdalPipelineExecutor(QgsProcessingAlgorithm):
@@ -90,7 +93,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         Returns the name of the group this algorithm belongs to. This string
         should be localised.
         """
-        return self.tr('Utilities')
+        return self.tr('GeoMove')
 
     def groupId(self):
         """
@@ -100,7 +103,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         contain lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'pdaltools'
+        return 'geomove'
 
     def shortHelpString(self):
         """
@@ -174,6 +177,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         """
         Here is where the processing itself takes place.
         """
+        self.feedback = feedback
 
         # need to skip processing?
         skip_if_out_exists = self.parameterAsBool(
@@ -220,7 +224,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         # first validate pipeline
         options = '--validate'
         commandline = self.createPdalCommand(options, pdal_pipeline, input_pcl_1, input_pcl_2, output_pcl)
-        self.runAndWait(commandline, feedback)
+        self.runAndWait(commandline, self.feedback)
 
         # run pipeline
         outDriver = self.getDriverType(output_pcl)
@@ -230,7 +234,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
             options = '--verbose=8'
 
         commandline = self.createPdalCommand(options, pdal_pipeline, input_pcl_1, input_pcl_2, output_pcl)
-        self.runAndWait(commandline, feedback)
+        self.runAndWait(commandline, self.feedback)
 
         # Return the results of the algorithm.
         return {self.OUTPUT_PCL: output_pcl}
@@ -253,6 +257,21 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         if output_pcl:
             driver = self.getDriverType(output_pcl)
             commandline.append("--writers.{}.filename={}".format(driver, output_pcl))
+
+            # add BBOX if driver is gdal. BBOX is get from input_pcl_1 metadata
+            # The rationale is that GDAL stage , for some version
+            # is nto streamable and, due to a PDAL bug need to have
+            # set BBOX as option of the writer
+            if driver == 'gdal':
+                pdalInfoJson = self.getPCLMetadata(input_pcl_1)
+
+                minx = pdalInfoJson['metadata']['minx']
+                miny = pdalInfoJson['metadata']['miny']
+                maxx = pdalInfoJson['metadata']['maxx']
+                maxy = pdalInfoJson['metadata']['maxy']
+
+                # bounds format is ([minX, maxX],[minY,maxY]).
+                commandline.append('--writers.{}.bounds="([{}, {}], [{}, {}])"'.format(driver, minx, maxx, miny, maxy))
 
         return commandline
 
@@ -285,11 +304,39 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
             return 'las'
 
         # I can't determine the driver to use
-        # the use the default "las"
+        # then use the default "las"
         return 'las'
 
+    def getPCLMetadata(self, pclFileName):
+        '''Extract metadata with pdal info --metadata.
+        Returns metadata JSON or None.'''
+        metadata = None
+        if pclFileName:
+            options = '--metadata'
+            commandline = ["pdal", "info", options, pclFileName]
+            returnedJson = self.runAndWait(commandline, self.feedback)
+
+            # clean returned string to be real json
+            # e.g. skip first stdout warning: 'Warning 1: Cannot find pcs.csv'
+            rows=returnedJson.split('\n')
+            if 'Warning 1: Cannot find pcs.csv' in rows[0]:
+                rows = rows[1:]
+            returnedJson = '\n'.join(rows)
+
+            # parse json
+            try:
+                metadata = json.loads(returnedJson)
+            except Exception as ex:
+                self.feedback.pushConsoleInfo(str(ex))
+
+        return metadata
+
     def runAndWait(self, commandline, feedback):
+        '''Subprocess pdal pipeline waiting it's end.
+        Returns stdout/error log of execution. The execution is not blocking.
+        '''
         readlineTimeout = 0.2
+        executionLog = ''
 
         feedback.pushConsoleInfo(" ".join(commandline))
         proc = subprocess.Popen(commandline,
@@ -306,15 +353,16 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
             out = nbsr.readline(readlineTimeout)
             if out:
                 feedback.pushConsoleInfo(out.decode("utf-8"))
+                executionLog += out.decode("utf-8")
 
             # allow the dialog to be responsive allowing accept cancel process
             QgsApplication.instance().processEvents()
 
-        
         # proc is terminated but could have more messages in stdout to read
         out = nbsr.readline(readlineTimeout)
         while out is not None :
             feedback.pushConsoleInfo(out.decode("utf-8"))
+            executionLog += out.decode("utf-8")
             out = nbsr.readline(readlineTimeout)
 
         # check return code depending on platform
@@ -331,6 +379,9 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         # check generic return code
         if proc.returncode != 0:
             raise QgsProcessingException("Failed execution of command {} with return code: {}".format(commandline, proc.returncode))
+
+        # return only pdal log
+        return executionLog
 
 
 # snipped from:
