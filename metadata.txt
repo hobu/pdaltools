@@ -30,7 +30,7 @@ tags=PDAL, point cloud, pointcloud, tools, las, laz, lidar, pipeline, PCL
 
 homepage=http://homepage
 category=Analysis
-icon=pdal_logo.png
+icon=pdal_logo_only.png
 # experimental flag
 experimental=True
 
