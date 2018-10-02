@@ -16,14 +16,14 @@ email=luipir@gmail.com, davidfernandezarango@hotmail.com
 
 about=This plugin installs the necessary tools to process point clouds by PDAL
 
-tracker=http://bugs
-repository=http://repo
+tracker=https://gitlab.com/cartolab/pdaltools/issues
+repository=https://gitlab.com/cartolab/pdaltools
 # End of mandatory metadata
 
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-# changelog=
+changelog=0.1 First version
 
 # Tags are comma separated with spaces allowed
 tags=PDAL, point cloud, pointcloud, tools, las, laz, lidar, pipeline, PCL
