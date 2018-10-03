@@ -271,7 +271,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
                 maxy = pdalInfoJson['metadata']['maxy']
 
                 # bounds format is ([minX, maxX],[minY,maxY]).
-                commandline.append('--writers.{}.bounds="([{}, {}], [{}, {}])"'.format(driver, minx, maxx, miny, maxy))
+                commandline.append('--writers.{}.bounds=([{}, {}], [{}, {}])'.format(driver, minx, maxx, miny, maxy))
 
         return commandline
 
