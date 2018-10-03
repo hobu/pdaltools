@@ -31,8 +31,13 @@ __copyright__ = '(C) 2018 by Cartolab'
 
 __revision__ = '$Format:%H$'
 
+import os
 from PyQt5.QtGui import QIcon
 from qgis.core import QgsProcessingProvider
+from processing.core.ProcessingConfig import (
+    ProcessingConfig,
+    Setting
+)
 from .pdal_pipeline_executor import PdalPipelineExecutor
 
 
@@ -44,12 +49,16 @@ class PDALToolsProvider(QgsProcessingProvider):
         # Load algorithms
         self.alglist = [PdalPipelineExecutor()]
 
+    def load(self):
+        ProcessingConfig.settingIcons[self.name()] = self.icon()
+        ProcessingConfig.addSetting(Setting(self.name(), 'ACTIVATE_PDALTOOLS',
+                                            self.tr('Activate'), True))
+        ProcessingConfig.readSettings()
+        self.refreshAlgorithms()
+        return True
+
     def unload(self):
-        """
-        Unloads the provider. Any tear-down steps required by the provider
-        should be implemented here.
-        """
-        pass
+        ProcessingConfig.removeSetting('ACTIVATE_PDALTOOLS')
 
     def loadAlgorithms(self):
         """
@@ -85,5 +94,10 @@ class PDALToolsProvider(QgsProcessingProvider):
         return self.name()
 
     def icon(self):
-        return QIcon(":/plugins/pdaltools/pdal_logo_only.png")
+        iconPath = os.path.join(os.path.dirname(__file__), 'pdal_logo_only.png')
+        return QIcon(iconPath)
+
+    def svgIconPath(self):
+        iconPath = os.path.join(os.path.dirname(__file__), 'pdal_logo.svg')
+        return iconPath
 
