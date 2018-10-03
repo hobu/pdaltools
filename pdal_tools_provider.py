@@ -64,7 +64,7 @@ class PDALToolsProvider(QgsProcessingProvider):
         string should be a unique, short, character only string, eg "qgis" or
         "gdal". This string should not be localised.
         """
-        return 'PDAL tools'
+        return 'PDALtools'
 
     def name(self):
         """
@@ -73,7 +73,7 @@ class PDALToolsProvider(QgsProcessingProvider):
 
         This string should be short (e.g. "Lastools") and localised.
         """
-        return self.tr('PDAL tools')
+        return self.tr('PDALtools')
 
     def longName(self):
         """

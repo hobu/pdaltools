@@ -83,7 +83,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'PdalPipelineExecutor'
+        return 'pdalpipelineexecutor'
 
     def displayName(self):
         """
@@ -97,7 +97,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         Returns the name of the group this algorithm belongs to. This string
         should be localised.
         """
-        return self.tr('GeoMove')
+        return self.tr('Utilities')
 
     def groupId(self):
         """
@@ -107,7 +107,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         contain lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'geomove'
+        return 'utilities'
 
     def shortHelpString(self):
         """
