@@ -114,7 +114,6 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-
         return self.tr(self.__doc__)
 
     def flags(self):
