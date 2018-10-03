@@ -41,7 +41,7 @@ from processing.core.ProcessingConfig import (
     ProcessingConfig,
     Setting
 )
-from .pdal_pipeline_executor import PdalPipelineExecutor
+from .algorithms.pdal_pipeline_executor import PdalPipelineExecutor
 
 
 class PDALToolsProvider(QgsProcessingProvider):

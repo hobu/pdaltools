@@ -34,7 +34,7 @@ from qgis.core import (
     QgsProcessingParameterDefinition,
     QgsProcessingParameterFileDestination,
     QgsProcessingParameterString)
-from .pdal_tools_algorithm import PDALtoolsAlgorithm
+from ..pdal_tools_algorithm import PDALtoolsAlgorithm
 
 class PdalPipelineExecutor(PDALtoolsAlgorithm):
     """
