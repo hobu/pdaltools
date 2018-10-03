@@ -24,6 +24,10 @@ __date__ = 'August 2018'
 __copyright__ = '(C) 2018, Luigi Pirelli'
 
 
+# modules to manage no-blocking stream reading
+from threading import Thread
+from queue import Queue, Empty
+# other common modules
 import os
 import sys
 import signal
@@ -31,8 +35,8 @@ import select
 import subprocess
 import gdal
 import json
-# import pdal # cannot import pdal because mosto stable versions just use python-pdal for py2
-from PyQt5.QtCore import QCoreApplication
+# cannot import pdal because most stable versions just use python-pdal for py2
+# import pdal
 from qgis.core import (QgsProcessing,
                        QgsProcessingException,
                        QgsProcessingAlgorithm,
@@ -42,16 +46,18 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterFileDestination,
                        QgsProcessingParameterString,
                        QgsApplication)
-import processing
-
 
 class PdalPipelineExecutor(QgsProcessingAlgorithm):
     """
-    Generic algorithm to process .las raw data files. 
-    The algorithm use as input a .las raw point cloud data and can create 
-    different products: classify point cloud into ground and not ground points,
-    identify pedestrian and wheelchair obstacles, create a ground DTM and a Intensity
-    raster to identify road marks
+    Generic algorithm to process get 0|1|2 params input
+    files as input to a configurable pipeline.
+    The interface allow to set only one output file. Output
+    can be a gdal/ogr managed format if managed by the pipeline.
+    Pipeline filname is an input string becasue is the most flexible
+    way to allow creting dinamic pipelines file names as input.
+    In case it's necessary to have an interface to select a specific
+    pipeline, would be better to integrate the executor in a processing
+    modeler with file selection input.
     """
 
     INPUT_PCL_1 = 'INPUT_PCL_1'
@@ -60,13 +66,11 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
     INPUT_SKIP_IF_OUT_EXISTS = 'INPUT_SKIP_IF_OUT_EXISTS'
     OUTPUT_PCL = 'OUTPUT_PCL'
 
-    #PCL_PARSING_REGEXP = '(?P<header>\w+?)_(?P<stripnumber>\d+?)_(?P<sensor>S\d?)\.(?P<inputformat>las|laz?)'
-
     def tr(self, string):
         """
         Returns a translatable string with the self.tr() function.
         """
-        return QCoreApplication.translate('Processing', string)
+        return QgsApplication.translate('Processing', string)
 
     def createInstance(self):
         return PdalPipelineExecutor()
@@ -120,11 +124,6 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
                QgsProcessingAlgorithm.FlagNoThreading
 
     def initAlgorithm(self, config=None):
-        """
-        Here we define the inputs and output of the algorithm, along
-        with some other properties.
-        """
-
         self.addParameter(
             QgsProcessingParameterFile(
                 name=self.INPUT_PCL_1,
@@ -162,9 +161,9 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
             )
         )
 
-        # We add the output file
+        # set outputs
         self.addParameter(
-                QgsProcessingParameterFileDestination(
+            QgsProcessingParameterFileDestination(
                 name=self.OUTPUT_PCL,
                 description=self.tr('Output file'),
                 defaultValue=None,
@@ -173,9 +172,9 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         )
 
     def processAlgorithm(self, parameters, context, feedback):
-        """
-        Here is where the processing itself takes place.
-        """
+        # saving feedback in instance variable to avoid passing 
+        # it to all methods. Take caree if can have effects in case of
+        # multithread execution
         self.feedback = feedback
 
         # need to skip processing?
@@ -193,7 +192,9 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         )
 
         # skip all process il parameter already exist
-        if skip_if_out_exists and os.path.exists(output_pcl) and os.path.isfile(output_pcl):
+        if skip_if_out_exists and \
+           os.path.exists(output_pcl) and \
+           os.path.isfile(output_pcl):
             feedback.pushConsoleInfo("Skipped step because output file already exists: {}".format(output_pcl))
             return {self.OUTPUT_PCL: output_pcl}
 
@@ -222,7 +223,12 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
 
         # first validate pipeline
         options = '--validate'
-        commandline = self.createPdalCommand(options, pdal_pipeline, input_pcl_1, input_pcl_2, output_pcl)
+        commandline = self.createPdalCommand(
+            options,
+            pdal_pipeline,
+            input_pcl_1,
+            input_pcl_2,
+            output_pcl)
         self.runAndWait(commandline, self.feedback)
 
         # run pipeline
@@ -232,7 +238,12 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
             #options = '--verbose=8 --nostream'
             pass
 
-        commandline = self.createPdalCommand(options, pdal_pipeline, input_pcl_1, input_pcl_2, output_pcl)
+        commandline = self.createPdalCommand(
+            options,
+            pdal_pipeline,
+            input_pcl_1,
+            input_pcl_2,
+            output_pcl)
         self.runAndWait(commandline, self.feedback)
 
         # Return the results of the algorithm.
@@ -275,9 +286,11 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         return commandline
 
     def getDriverType(self, filename):
-        '''Get the writer or reader type basing on extension of filename or if it can be opne by gdal.'''
+        '''Get the writer or reader type basing on
+        extension of filename or if it can be opne
+        by gdal.'''
         if os.path.exists(filename):
-            dataset = gdal.Open( filename, gdal.GA_ReadOnly )
+            dataset = gdal.Open(filename, gdal.GA_ReadOnly)
             if dataset is not None:
                 # clsoe dataset
                 dataset = None
@@ -317,7 +330,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
 
             # clean returned string to be real json
             # e.g. skip first stdout warning: 'Warning 1: Cannot find pcs.csv'
-            rows=returnedJson.split('\n')
+            rows = returnedJson.split('\n')
             if 'Warning 1: Cannot find pcs.csv' in rows[0]:
                 rows = rows[1:]
             returnedJson = '\n'.join(rows)
@@ -339,11 +352,11 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
 
         feedback.pushConsoleInfo(" ".join(commandline))
         proc = subprocess.Popen(commandline,
-            shell=False,
-            stdout=subprocess.PIPE,
-            stdin=open(os.devnull),
-            stderr=subprocess.STDOUT,
-            universal_newlines=False)
+                                shell=False,
+                                stdout=subprocess.PIPE,
+                                stdin=open(os.devnull),
+                                stderr=subprocess.STDOUT,
+                                universal_newlines=False)
         nbsr = NonBlockingStreamReader(proc.stdout)
         while proc.poll() is None:
             if feedback.isCanceled():
@@ -359,7 +372,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
 
         # proc is terminated but could have more messages in stdout to read
         out = nbsr.readline(readlineTimeout)
-        while out is not None :
+        while out is not None:
             feedback.pushConsoleInfo(out.decode("utf-8"))
             executionLog += out.decode("utf-8")
             out = nbsr.readline(readlineTimeout)
@@ -386,11 +399,12 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
 # snipped from:
 # http://eyalarubas.com/python-subproc-nonblock.html
 # tnx to: https://github.com/EyalAr
-from threading import Thread
-from queue import Queue, Empty
-
 class NonBlockingStreamReader:
-
+    '''Queue reader to avoid stdout/stderr reading block
+    snipped from:
+    http://eyalarubas.com/python-subproc-nonblock.html
+    tnx to: https://github.com/EyalAr
+    '''
     def __init__(self, stream):
         '''
         stream: the stream to read from.
@@ -412,16 +426,17 @@ class NonBlockingStreamReader:
                 else:
                     raise UnexpectedEndOfStream
 
-        self._t = Thread(target = _populateQueue,
-                args = (self._s, self._q))
+        self._t = Thread(target=_populateQueue,
+                         args=(self._s, self._q))
         self._t.daemon = True
         self._t.start() #start collecting lines from the stream
 
-    def readline(self, timeout = None):
+    def readline(self, timeout=None):
         try:
-            return self._q.get(block = timeout is not None,
-                    timeout = timeout)
+            return self._q.get(block=timeout is not None,
+                               timeout=timeout)
         except Empty:
             return None
 
-class UnexpectedEndOfStream(Exception): pass
+class UnexpectedEndOfStream(Exception):
+    pass
