@@ -37,6 +37,7 @@ import gdal
 import json
 # cannot import pdal because most stable versions just use python-pdal for py2
 # import pdal
+from PyQt5.QtGui import QIcon
 from qgis.core import (QgsProcessing,
                        QgsProcessingException,
                        QgsProcessingAlgorithm,
@@ -74,6 +75,10 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
 
     def createInstance(self):
         return PdalPipelineExecutor()
+
+    def icon(self):
+        iconPath = os.path.join(os.path.dirname(__file__), 'pdal_logo_only.png')
+        return QIcon(iconPath)
 
     def name(self):
         """
