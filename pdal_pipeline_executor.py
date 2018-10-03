@@ -46,6 +46,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterFileDestination,
                        QgsProcessingParameterString,
                        QgsApplication)
+from processing.tools.system import isWindows, isMac
 
 class PdalPipelineExecutor(QgsProcessingAlgorithm):
     """
@@ -348,12 +349,21 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         executionLog = ''
 
         feedback.pushConsoleInfo(" ".join(commandline))
+
+        # !Note! subprocess call is similar as in Grass7Utils.executeGrass
+        # For MS-Windows, we need to hide the console window.
+        if isWindows():
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            si.wShowWindow = subprocess.SW_HIDE
+
         proc = subprocess.Popen(commandline,
-                                shell=False,
+                                shell=True if isMac() else False,
                                 stdout=subprocess.PIPE,
                                 stdin=open(os.devnull),
                                 stderr=subprocess.STDOUT,
-                                universal_newlines=False)
+                                universal_newlines=True,
+                                startupinfo=si if isWindows() else None)
         nbsr = NonBlockingStreamReader(proc.stdout)
         while proc.poll() is None:
             if feedback.isCanceled():
