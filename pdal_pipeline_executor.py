@@ -66,11 +66,10 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
     INPUT_SKIP_IF_OUT_EXISTS = 'INPUT_SKIP_IF_OUT_EXISTS'
     OUTPUT_PCL = 'OUTPUT_PCL'
 
-    def tr(self, string):
-        """
-        Returns a translatable string with the self.tr() function.
-        """
-        return QgsApplication.translate('Processing', string)
+    def tr(self, string, context=''):
+        if context == '':
+            context = 'PDALtoolsAlgorithmProvider'
+        return QgsApplication.translate(context, string)
 
     def createInstance(self):
         return PdalPipelineExecutor()

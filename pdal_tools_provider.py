@@ -101,3 +101,8 @@ class PDALToolsProvider(QgsProcessingProvider):
         iconPath = os.path.join(os.path.dirname(__file__), 'pdal_logo.svg')
         return iconPath
 
+    def tr(self, string, context=''):
+        if context == '':
+            context = 'PDALtoolsAlgorithmProvider'
+        return QCoreApplication.translate(context, string)
+
