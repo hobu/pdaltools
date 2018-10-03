@@ -371,8 +371,8 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
 
             out = nbsr.readline(readlineTimeout)
             if out:
-                feedback.pushConsoleInfo(out.decode("utf-8"))
-                executionLog += out.decode("utf-8")
+                feedback.pushConsoleInfo(out)
+                executionLog += out
 
             # allow the dialog to be responsive allowing accept cancel process
             QgsApplication.instance().processEvents()
@@ -380,8 +380,8 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
         # proc is terminated but could have more messages in stdout to read
         out = nbsr.readline(readlineTimeout)
         while out is not None:
-            feedback.pushConsoleInfo(out.decode("utf-8"))
-            executionLog += out.decode("utf-8")
+            feedback.pushConsoleInfo(out)
+            executionLog += out
             out = nbsr.readline(readlineTimeout)
 
         # check return code depending on platform
