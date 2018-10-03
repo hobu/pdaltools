@@ -167,7 +167,6 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
                 QgsProcessingParameterFileDestination(
                 name=self.OUTPUT_PCL,
                 description=self.tr('Output file'),
-                fileFilter='las',
                 defaultValue=None,
                 createByDefault=True
             )
