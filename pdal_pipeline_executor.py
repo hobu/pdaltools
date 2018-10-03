@@ -120,8 +120,7 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
 
     def flags(self):
         return QgsProcessingAlgorithm.FlagSupportsBatch | \
-               QgsProcessingAlgorithm.FlagCanCancel | \
-               QgsProcessingAlgorithm.FlagNoThreading
+               QgsProcessingAlgorithm.FlagCanCancel
 
     def initAlgorithm(self, config=None):
         self.addParameter(
