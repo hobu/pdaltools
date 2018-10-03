@@ -228,10 +228,10 @@ class PdalPipelineExecutor(QgsProcessingAlgorithm):
 
         # run pipeline
         outDriver = self.getDriverType(output_pcl)
+        options = '--verbose=8'
         if outDriver == 'gdal':
-            options = '--verbose=8 --nostream'
-        else:
-            options = '--verbose=8'
+            #options = '--verbose=8 --nostream'
+            pass
 
         commandline = self.createPdalCommand(options, pdal_pipeline, input_pcl_1, input_pcl_2, output_pcl)
         self.runAndWait(commandline, self.feedback)
