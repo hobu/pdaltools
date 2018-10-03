@@ -31,6 +31,7 @@ __copyright__ = '(C) 2018 by Cartolab'
 
 __revision__ = '$Format:%H$'
 
+from PyQt5.QtGui import QIcon
 from qgis.core import QgsProcessingProvider
 from .pdal_pipeline_executor import PdalPipelineExecutor
 
@@ -82,3 +83,7 @@ class PDALToolsProvider(QgsProcessingProvider):
         implementation returns the same string as name().
         """
         return self.name()
+
+    def icon(self):
+        return QIcon(":/plugins/pdaltools/pdal_logo_only.png")
+
