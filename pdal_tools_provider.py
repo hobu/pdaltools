@@ -33,7 +33,10 @@ __revision__ = '$Format:%H$'
 
 import os
 from PyQt5.QtGui import QIcon
-from qgis.core import QgsProcessingProvider
+from qgis.core import (
+    QgsProcessingProvider,
+    QgsApplication
+)
 from processing.core.ProcessingConfig import (
     ProcessingConfig,
     Setting
@@ -104,5 +107,5 @@ class PDALToolsProvider(QgsProcessingProvider):
     def tr(self, string, context=''):
         if context == '':
             context = 'PDALtoolsAlgorithmProvider'
-        return QCoreApplication.translate(context, string)
+        return QgsApplication.translate(context, string)
 
