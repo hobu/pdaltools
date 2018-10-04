@@ -7,14 +7,20 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=PDAL Tools
+name=PDALtools
 qgisMinimumVersion=3.0
-description=This plugin installs PDAL Tools
+description=Installs PDALtools Processing provider
 version=0.1
-author=Cartolab
-email=luipir@gmail.com, davidfernandezarango@hotmail.com
+author=Luigi Pirelli and David fernandez Arango (Cartolab)
+email=luipir@gmail.com,davidfernandezarango@hotmail.com
 
-about=This plugin installs the necessary tools to process point clouds by PDAL
+about=This plugin installs the necessary tools to integrate PDAL into Processing Toolbox
+    <b>Prerequisite to use this provider is to have <a href="http://www.pdal.io">PDAL</a> installed.</b>
+    Any contribution as example models, generic pipelines, bug fix or new features
+    are warmly welcome!
+    Plugin developed for <a href="http://cartolab.udc.es/cartoweb/">Cartolab</a> as followup of <a href="http://cartolab.udc.es/geomove/">GeoMove</a> project.
+
+    Note: Plugin logo courtesy of PDAL project
 
 tracker=https://gitlab.com/cartolab/pdaltools/issues
 repository=https://gitlab.com/cartolab/pdaltools
@@ -26,7 +32,7 @@ repository=https://gitlab.com/cartolab/pdaltools
 changelog=0.1 First version
 
 # Tags are comma separated with spaces allowed
-tags=PDAL, point cloud, pointcloud, tools, las, laz, lidar, pipeline, PCL
+tags=PDAL, point cloud, pointcloud, pointclouds, pipeline, PCL, las, laz, LiDAR, DEM, DTM, DSM, CHM, contours, segmentation
 
 homepage=https://gitlab.com/cartolab/pdaltools
 category=Analysis
