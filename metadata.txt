@@ -28,7 +28,7 @@ changelog=0.1 First version
 # Tags are comma separated with spaces allowed
 tags=PDAL, point cloud, pointcloud, tools, las, laz, lidar, pipeline, PCL
 
-homepage=http://homepage
+homepage=https://gitlab.com/cartolab/pdaltools
 category=Analysis
 icon=pdal_logo_only.png
 # experimental flag
