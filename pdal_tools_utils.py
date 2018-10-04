@@ -63,7 +63,8 @@ class PDALtoolsUtils:
                 extensions = drv.GetMetadataItem(gdal.DMD_EXTENSIONS)
                 if extensions:
                     extensions = extensions.split()
-                    if extension in extensions:
+                    extensions = [extension.lower() for extension in extensions]
+                    if extension.lower() in extensions:
                         return 'gdal'
 
         if extension in ['las', 'laz']:
