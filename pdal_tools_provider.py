@@ -32,11 +32,18 @@ __copyright__ = '(C) 2018 by Cartolab'
 __revision__ = '$Format:%H$'
 
 import os
+import glob
+import shutil
 from PyQt5.QtGui import QIcon
 from qgis.core import (
+    Qgis,
     QgsProcessingProvider,
-    QgsApplication
+    QgsApplication,
+    QgsMessageLog,
+    QgsProcessingModelAlgorithm
 )
+from qgis.utils import iface
+from processing.modeler.ModelerUtils import ModelerUtils
 from processing.core.ProcessingConfig import (
     ProcessingConfig,
     Setting
@@ -49,6 +56,10 @@ class PDALToolsProvider(QgsProcessingProvider):
     def __init__(self):
         QgsProcessingProvider.__init__(self)
 
+        self.modelsPath = os.path.join(os.path.dirname(__file__), 'models')
+        self.pipelinesPath = os.path.join(os.path.dirname(__file__), 'pipelines')
+        self.messageBarTag = type(self).__name__ # e.g. string PDALToolsProvider
+
         # Load algorithms
         self.alglist = [PdalPipelineExecutor()]
 
@@ -58,6 +69,14 @@ class PDALToolsProvider(QgsProcessingProvider):
                                             self.tr('Activate'), True))
         ProcessingConfig.readSettings()
         self.refreshAlgorithms()
+
+        if QgsApplication.processingRegistry().providerById('model'):
+            self.loadModels()
+        else:
+            # lazy load of models waiting QGIS initialization. This would avoid
+            # to load modelas when model provider is still not available in processing
+            iface.initializationCompleted.connect(self.loadModels)
+
         return True
 
     def unload(self):
@@ -69,6 +88,28 @@ class PDALToolsProvider(QgsProcessingProvider):
         """
         for alg in self.alglist:
             self.addAlgorithm( alg )
+
+    def loadModels(self):
+        '''Register models present in models folder of the plugin.'''
+        modelsFiles = glob.glob(os.path.join(self.modelsPath, '*.model3'))
+
+        for modelFileName in modelsFiles:
+            alg = QgsProcessingModelAlgorithm()
+            if not alg.fromFile(modelFileName):
+                QgsMessageLog.logMessage(self.tr('Not well formed model: {}'.format(modelFileName)), self.messageBarTag, Qgis.Warning)
+                continue
+
+            destFilename = os.path.join(ModelerUtils.modelsFolders()[0], os.path.basename(modelFileName))
+            # skip if dest exists to avoid overwrite
+            if os.path.exists(destFilename):
+                QgsMessageLog.logMessage(self.tr('Model already exists: {} it will be not overwritten'.format(modelFileName)), self.messageBarTag, Qgis.Warning)
+                continue
+            try:
+                shutil.copyfile(modelFileName, destFilename)
+            except Exception as ex:
+                QgsMessageLog.logMessage(self.tr('Failed to install model: {} - {}'.format(modelFileName, str(ex))), self.messageBarTag, Qgis.Warning)
+
+        QgsApplication.processingRegistry().providerById('model').refreshAlgorithms()
 
     def id(self):
         """
