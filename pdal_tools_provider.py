@@ -145,6 +145,17 @@ class PDALToolsProvider(QgsProcessingProvider):
         iconPath = os.path.join(os.path.dirname(__file__), 'pdal_logo.svg')
         return iconPath
 
+    def defaultRasterFileExtension(self):
+        return 'tif'
+
+    def defaultVectorFileExtension(self):
+        return 'las'
+
+    def supportedOutputVectorLayerExtensions(self):
+        formats = super().supportedOutputVectorLayerExtensions()
+        formats.append(self.defaultVectorFileExtension())
+        return formats
+
     def tr(self, string, context=''):
         if context == '':
             context = 'PDALtoolsAlgorithmProvider'
