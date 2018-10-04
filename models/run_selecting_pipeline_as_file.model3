@@ -53,7 +53,7 @@
     </Option>
   </Option>
   <Option name="help"/>
-  <Option value="PDALtools example models" type="QString" name="model_group"/>
+  <Option value="PDALtools examples" type="QString" name="model_group"/>
   <Option value="Run selecting Pipeline as File" type="QString" name="model_name"/>
   <Option type="Map" name="parameterDefinitions">
     <Option type="Map" name="PDALtools:pdalpipelineexecutor_1:OutputLAS">
