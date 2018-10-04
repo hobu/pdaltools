@@ -1,0 +1,7 @@
+.git*              export-ignore
+Makefile           export-ignore
+pylintrc           export-ignore
+test               export-ignore
+scripts            export-ignore
+plugin_upload.py   export-ignore
+
