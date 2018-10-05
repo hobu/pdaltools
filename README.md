@@ -1,7 +1,6 @@
 QGIS Processing provider for PDAL PointCloud algorithms integration
 ===
 
-
 Description
 ---
 
@@ -22,7 +21,7 @@ Project  : [GeoMove](http://cartolab.udc.es/geomove/)
 
 Premise
 ---
-Please read [PDAL](https://pdal.io/) documentation first to understand how to create a json pipeline and how paramteres are passed via command line.
+Please read [PDAL](https://pdal.io/) documentation first to understand how to create a json pipeline and how parameters are passed via command line.
 
 Dependencies
 ----
