@@ -33,7 +33,6 @@ __revision__ = '$Format:%H$'
 
 import os
 import glob
-import shutil
 from PyQt5.QtGui import QIcon
 from qgis.core import (
     Qgis,
@@ -58,7 +57,7 @@ class PDALToolsProvider(QgsProcessingProvider):
 
         self.modelsPath = os.path.join(os.path.dirname(__file__), 'models')
         self.pipelinesPath = os.path.join(os.path.dirname(__file__), 'pipelines')
-        self.messageBarTag = type(self).__name__ # e.g. string PDALToolsProvider
+        self.messageTag = type(self).__name__ # e.g. string PDALToolsProvider
 
         # Load algorithms
         self.alglist = [PdalPipelineExecutor()]
@@ -96,18 +95,20 @@ class PDALToolsProvider(QgsProcessingProvider):
         for modelFileName in modelsFiles:
             alg = QgsProcessingModelAlgorithm()
             if not alg.fromFile(modelFileName):
-                QgsMessageLog.logMessage(self.tr('Not well formed model: {}'.format(modelFileName)), self.messageBarTag, Qgis.Warning)
+                QgsMessageLog.logMessage(self.tr('Not well formed model: {}'.format(modelFileName)), self.messageTag, Qgis.Warning)
                 continue
 
             destFilename = os.path.join(ModelerUtils.modelsFolders()[0], os.path.basename(modelFileName))
             # skip if dest exists to avoid overwrite
-            if os.path.exists(destFilename):
-                QgsMessageLog.logMessage(self.tr('Model already exists: {} it will be not overwritten'.format(modelFileName)), self.messageBarTag, Qgis.Warning)
+            if os.path.exists(destFilename) and os.path.isfile(destFilename) and not os.path.islink(destFilename):
+                QgsMessageLog.logMessage(self.tr('Model already exists: {} it will be not overwritten'.format(modelFileName)), self.messageTag, Qgis.Warning)
                 continue
+
             try:
-                shutil.copyfile(modelFileName, destFilename)
+                os.symlink(modelFileName, destFilename)
             except Exception as ex:
-                QgsMessageLog.logMessage(self.tr('Failed to install model: {} - {}'.format(modelFileName, str(ex))), self.messageBarTag, Qgis.Warning)
+                QgsMessageLog.logMessage(self.tr('Failed to install model: {} - {}'.format(modelFileName, str(ex))), self.messageTag, Qgis.Warning)
+                continue
 
         QgsApplication.processingRegistry().providerById('model').refreshAlgorithms()
 
