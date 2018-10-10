@@ -33,6 +33,7 @@ __revision__ = '$Format:%H$'
 
 import os
 import glob
+import shutil
 from PyQt5.QtGui import QIcon
 from qgis.core import (
     Qgis,
@@ -47,6 +48,7 @@ from processing.core.ProcessingConfig import (
     ProcessingConfig,
     Setting
 )
+from processing.tools.system import isWindows
 from .algorithms.pdal_pipeline_executor import PdalPipelineExecutor
 
 
@@ -105,7 +107,13 @@ class PDALToolsProvider(QgsProcessingProvider):
                 continue
 
             try:
-                os.symlink(modelFileName, destFilename)
+                if os.path.exists(destFilename):
+                    os.remove(destFilename)
+
+                if isWindows():
+                    shutil.copyfile(modelFileName, destFilename)
+                else:
+                    os.symlink(modelFileName, destFilename)
             except Exception as ex:
                 QgsMessageLog.logMessage(self.tr('Failed to install model: {} - {}'.format(modelFileName, str(ex))), self.messageTag, Qgis.Warning)
                 continue
