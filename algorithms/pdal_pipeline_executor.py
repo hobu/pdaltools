@@ -35,6 +35,7 @@ from qgis.core import (
     QgsProcessingParameterFileDestination,
     QgsProcessingParameterString)
 from ..pdal_tools_algorithm import PDALtoolsAlgorithm
+from ..pdal_tools_utils import PDALtoolsUtils
 
 class PdalPipelineExecutor(PDALtoolsAlgorithm):
     """
@@ -195,6 +196,7 @@ class PdalPipelineExecutor(PDALtoolsAlgorithm):
         )
         if not pdal_pipeline:
             raise QgsProcessingException(self.invalidSourceError(parameters, self.INPUT_PIPELINE))
+
         if not os.path.exists(pdal_pipeline) or not os.path.isfile(pdal_pipeline):
             raise QgsProcessingException(self.invalidSourceError(parameters, self.INPUT_PIPELINE))
 
@@ -209,7 +211,7 @@ class PdalPipelineExecutor(PDALtoolsAlgorithm):
         self.runAndWait(commandline)
 
         # run pipeline
-        outDriver = self.getDriverType(output_pcl)
+        outDriver = PDALtoolsUtils.getDriverType(output_pcl)
         options = '--verbose=8'
         if outDriver == 'gdal':
             #options = '--verbose=8 --nostream'

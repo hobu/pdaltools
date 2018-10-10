@@ -97,7 +97,7 @@ class PDALtoolsAlgorithm(QgsProcessingAlgorithm):
             raise QgsProcessingException("None PCL or at least {} have to be set ".format(self.INPUT_PCL_1))
 
         if output_pcl:
-            driver = self.getDriverType(output_pcl)
+            driver = PDALtoolsUtils.getDriverType(output_pcl)
             commandline.append("--writers.{}.filename={}".format(driver, output_pcl))
 
             # add BBOX if driver is gdal. BBOX is get from input_pcl_1 metadata
