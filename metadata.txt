@@ -10,7 +10,7 @@
 name=PDALtools
 qgisMinimumVersion=3.0
 description=Installs PDALtools Processing provider
-version=0.1.1
+version=0.1.2
 author=Luigi Pirelli, David Fernández Arango and Alberto Varela García (CartoLAB)
 email=luipir@gmail.com,davidfernandezarango@hotmail.com, alberto.varela@udc.es
 
@@ -29,7 +29,8 @@ repository=https://gitlab.com/cartolab/pdaltools
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog=0.1.1 install using symlinks + more references
+changelog=0.1.2 fix pipeline string strip + refactoring fixes
+    0.1.1 install using symlinks + more references
     0.1 First version
 
 # Tags are comma separated with spaces allowed
