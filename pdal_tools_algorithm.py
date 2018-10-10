@@ -25,6 +25,7 @@ __copyright__ = '(C) 2018, Luigi Pirelli'
 import os
 import signal
 import subprocess
+import json
 
 from PyQt5.QtGui import QIcon
 from qgis.core import (
@@ -105,7 +106,28 @@ class PDALtoolsAlgorithm(QgsProcessingAlgorithm):
             # is nto streamable and, due to a PDAL bug need to have
             # set BBOX as option of the writer
             if driver == 'gdal':
-                pdalInfoJson = self.getPCLMetadata(input_pcl_1)
+                if input_pcl_1:
+                    pdalInfoJson = self.getPCLMetadata(input_pcl_1)
+                else:
+                    # get the pcl name from the pipeline
+                    with open(pdal_pipeline, 'r') as f:
+                        jsondata = f.readlines()
+                    # strip all comments that does not part of json standard
+                    jsondata = [line.strip() for line in jsondata if (not line.strip().startswith('/') and not line.strip().startswith('*') )]
+                    jsondata = "".join(jsondata)
+                    try:
+                        jsondata = json.loads(jsondata)
+                    except Exception as ex:
+                        raise QgsProcessingException(str(ex))
+
+                    stage_map = {
+                        "reader1":0,
+                    }
+                    pcl_from_pipeline = jsondata["pipeline"][stage_map['reader1']]['filename']
+                    if not pcl_from_pipeline:
+                        raise QgsProcessingException("cannot determine a PCL from get boundingbox for gdal writer")
+
+                    pdalInfoJson = self.getPCLMetadata(pcl_from_pipeline)
 
                 minx = pdalInfoJson['metadata']['minx']
                 miny = pdalInfoJson['metadata']['miny']
