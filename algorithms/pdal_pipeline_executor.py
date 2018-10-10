@@ -196,7 +196,11 @@ class PdalPipelineExecutor(PDALtoolsAlgorithm):
         )
         if not pdal_pipeline:
             raise QgsProcessingException(self.invalidSourceError(parameters, self.INPUT_PIPELINE))
-
+        # strips tiling and heading spaces and chars attached during drag&drop (linux)
+        pdal_pipeline = pdal_pipeline.lstrip().rstrip()
+        pdal_pipeline = pdal_pipeline.rstrip('\r\n')
+        if pdal_pipeline.startswith('file://'):
+            pdal_pipeline = pdal_pipeline[7:]
         if not os.path.exists(pdal_pipeline) or not os.path.isfile(pdal_pipeline):
             raise QgsProcessingException(self.invalidSourceError(parameters, self.INPUT_PIPELINE))
 
