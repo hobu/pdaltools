@@ -11,8 +11,8 @@ name=PDALtools
 qgisMinimumVersion=3.0
 description=Installs PDALtools Processing provider
 version=0.1
-author=Luigi Pirelli and David fernandez Arango (Cartolab)
-email=luipir@gmail.com,davidfernandezarango@hotmail.com
+author=Luigi Pirelli, David Fernández Arango and Alberto Varela García (CartoLAB)
+email=luipir@gmail.com,davidfernandezarango@hotmail.com, alberto.varela@udc.es
 
 about=This plugin installs the necessary tools to integrate PDAL into Processing Toolbox
     <b>Prerequisite to use this provider is to have <a href="http://www.pdal.io">PDAL</a> installed.</b>
