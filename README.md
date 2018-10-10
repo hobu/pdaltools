@@ -12,12 +12,13 @@ Contributions are welcome to add new wrappers, generic pipelines, new features.
 
 The base plugin was developed by:
 
-* David Fernandez Arango (davidfernandezarango AT hotmail DOT com)
-* Luigi Pirelli (luipir AT gmail DOT com)
+* Luigi Pirelli (luipir AT gmail DOT com) 
+* David Fernández Arango (davidfernandezarango AT hotmail DOT com)
+* Francisco Alberto Varela García (alberto.varela AT udc DOT es) 
 
 dev for  : [CartoLab](http://cartolab.udc.es/cartoweb/)
 
-Project  : [GeoMove](http://cartolab.udc.es/geomove/)
+Project  : Análisis de indicadores big geo-data sobre viarios urbanos para el diseño dinámico de caminos escolares seguros (SPIP2017-02340). [GeoMove](http://cartolab.udc.es/geomove/)
 
 Premise
 ---
