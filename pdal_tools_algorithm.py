@@ -65,7 +65,7 @@ class PDALtoolsAlgorithm(QgsProcessingAlgorithm):
         if pclFileName:
             options = '--metadata'
             commandline = ["pdal", "info", options, pclFileName]
-            returnedJson = self.runAndWait(commandline, self.feedback)
+            returnedJson = self.runAndWait(commandline)
 
             # clean returned string to be real json
             # e.g. skip first stdout warning: 'Warning 1: Cannot find pcs.csv'
