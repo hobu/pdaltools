@@ -81,6 +81,18 @@ class PDALToolsProvider(QgsProcessingProvider):
         return True
 
     def unload(self):
+        # remove all models
+        modelsFiles = glob.glob(os.path.join(self.modelsPath, '*.model3'))
+        for modelFileName in modelsFiles:
+            installedModel = os.path.join(ModelerUtils.modelsFolders()[0], os.path.basename(modelFileName))
+            try:
+                if os.path.exists(installedModel):
+                    os.remove(installedModel)
+            except Exception as ex:
+                QgsMessageLog.logMessage(self.tr('Failed to uninstall model: {} - {}'.format(installedModel, str(ex))), self.messageTag, Qgis.Warning)
+                continue
+        QgsApplication.processingRegistry().providerById('model').refreshAlgorithms()
+
         ProcessingConfig.removeSetting('ACTIVATE_PDALTOOLS')
 
     def loadAlgorithms(self):
