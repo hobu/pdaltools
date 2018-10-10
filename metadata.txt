@@ -10,7 +10,7 @@
 name=PDALtools
 qgisMinimumVersion=3.0
 description=Installs PDALtools Processing provider
-version=0.1
+version=0.1.1
 author=Luigi Pirelli, David Fernández Arango and Alberto Varela García (CartoLAB)
 email=luipir@gmail.com,davidfernandezarango@hotmail.com, alberto.varela@udc.es
 
