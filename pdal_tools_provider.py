@@ -101,11 +101,6 @@ class PDALToolsProvider(QgsProcessingProvider):
                 continue
 
             destFilename = os.path.join(ModelerUtils.modelsFolders()[0], os.path.basename(modelFileName))
-            # skip if dest exists to avoid overwrite
-            if os.path.exists(destFilename) and os.path.isfile(destFilename) and not os.path.islink(destFilename):
-                QgsMessageLog.logMessage(self.tr('Model already exists: {} it will be not overwritten'.format(modelFileName)), self.messageTag, Qgis.Warning)
-                continue
-
             try:
                 if os.path.exists(destFilename):
                     os.remove(destFilename)
