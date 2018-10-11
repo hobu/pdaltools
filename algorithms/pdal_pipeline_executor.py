@@ -105,7 +105,7 @@ class PdalPipelineExecutor(PDALtoolsAlgorithm):
         self.addParameter(
             QgsProcessingParameterFile(
                 name=self.INPUT_PCL_1,
-                description=self.tr('Input LAS/LAZ file'),
+                description=self.tr('Input LAS (or LAZ if managed by installed PDAL)'),
                 behavior=QgsProcessingParameterFile.File,
                 extension=None,
                 defaultValue=None,
