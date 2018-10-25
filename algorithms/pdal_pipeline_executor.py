@@ -176,6 +176,11 @@ class PdalPipelineExecutor(PDALtoolsAlgorithm):
             feedback.pushConsoleInfo("Skipped step because output file already exists: {}".format(output_pcl))
             return {self.OUTPUT_PCL: output_pcl}
 
+        # create output folders in the strange case they don't exist
+        output_pcl_folder = os.path.dirname(output_pcl)
+        if not os.path.exists(output_pcl_folder):
+            os.makedirs(output_pcl_folder)
+
         # no skip => gest all imputs
         input_pcl_1 = self.parameterAsFile(
             parameters,
