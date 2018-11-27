@@ -31,7 +31,9 @@ from PyQt5.QtGui import QIcon
 from qgis.core import (
     QgsApplication,
     QgsProcessingAlgorithm,
-    QgsProcessingException)
+    QgsProcessingException,
+    QgsMessageLog,
+    Qgis)
 from processing.tools.system import isWindows, isMac
 
 from .pdal_tools_utils import (
@@ -57,6 +59,7 @@ class PDALtoolsAlgorithm(QgsProcessingAlgorithm):
     def flags(self):
         return QgsProcessingAlgorithm.FlagSupportsBatch | \
                QgsProcessingAlgorithm.FlagCanCancel
+
 
     def getPCLMetadata(self, pclFileName):
         '''Extract metadata with pdal info --metadata.
@@ -145,10 +148,12 @@ class PDALtoolsAlgorithm(QgsProcessingAlgorithm):
         '''
         executionLog = ''
 
+        QgsMessageLog.logMessage(" ".join(commandline),'PDALTools', Qgis.Info)
         self.feedback.pushConsoleInfo(" ".join(commandline))
 
         # !Note! subprocess call is similar as in Grass7Utils.executeGrass
         # For MS-Windows, we need to hide the console window.
+        si = None
         if isWindows():
             si = subprocess.STARTUPINFO()
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -160,7 +165,7 @@ class PDALtoolsAlgorithm(QgsProcessingAlgorithm):
                                 stdin=open(os.devnull),
                                 stderr=subprocess.STDOUT,
                                 universal_newlines=True,
-                                startupinfo=si if isWindows() else None)
+                                startupinfo=si)
         nbsr = NonBlockingStreamReader(proc.stdout)
         while proc.poll() is None:
             if self.feedback.isCanceled():
@@ -168,6 +173,7 @@ class PDALtoolsAlgorithm(QgsProcessingAlgorithm):
 
             out = nbsr.readline(self.readlineTimeout)
             if out:
+                QgsMessageLog.logMessage(out,'PDALTools', Qgis.Info)
                 self.feedback.pushConsoleInfo(out)
                 executionLog += out
 
@@ -177,6 +183,7 @@ class PDALtoolsAlgorithm(QgsProcessingAlgorithm):
         # proc is terminated but could have more messages in stdout to read
         out = nbsr.readline(self.readlineTimeout)
         while out is not None:
+            QgsMessageLog.logMessage(out,'PDALTools', Qgis.Info)
             self.feedback.pushConsoleInfo(out)
             executionLog += out
             out = nbsr.readline(self.readlineTimeout)
@@ -187,7 +194,7 @@ class PDALtoolsAlgorithm(QgsProcessingAlgorithm):
         else:
             # it is a unix env
             if proc.returncode == -(signal.SIGKILL.value):
-                raise QgsProcessingException("Command {} has been cancelled".format(commandline))
+                raise QgsProcessingException("Command {} has been cancelled with signal: {}".format(commandline, proc.returncode))
 
         # check generic return code
         if proc.returncode != 0:
