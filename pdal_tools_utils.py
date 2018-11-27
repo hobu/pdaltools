@@ -26,7 +26,11 @@ import os
 import gdal
 from qgis.core import (
     QgsProcessingException,
-    QgsApplication
+    QgsApplication,
+    QgsMessageLog,
+    Qgis,
+    QgsApplication,
+    QgsTask
 )
 # modules to manage no-blocking stream reading
 from threading import Thread
@@ -74,11 +78,7 @@ class PDALtoolsUtils:
         # then use the default "las"
         return 'las'
 
-
-# snipped from:
-# http://eyalarubas.com/python-subproc-nonblock.html
-# tnx to: https://github.com/EyalAr
-class NonBlockingStreamReader:
+class _NonBlockingStreamReader:
     '''Queue reader to avoid stdout/stderr reading block
     snipped from:
     http://eyalarubas.com/python-subproc-nonblock.html
@@ -99,16 +99,31 @@ class NonBlockingStreamReader:
             '''
 
             while True:
-                line = stream.readline()
-                if line:
-                    queue.put(line)
-                else:
-                    raise UnexpectedEndOfStream
+                try:
+                    if stream:
+                        line = stream.readline()
+                        if line:
+                            queue.put(line)
+                        else:
+                            queue.put('!!!!UnexpectedEndOfStream!!!!')
+                            return
+                            # raise UnexpectedEndOfStream
+                    else:
+                        queue.put('!!!!No more stream!!!!')
+                        return
+                except Exception as ex:
+                    queue.put('!!!!Unexpected exception {}!!!!'.format(str(ex)))
 
         self._t = Thread(target=_populateQueue,
                          args=(self._s, self._q))
         self._t.daemon = True
         self._t.start() #start collecting lines from the stream
+
+    def __del__(self):
+        if self._t and self._t.is_alive():
+            QgsMessageLog.logMessage('Waiting thread end','PDALTools', Qgis.Info)
+            self._t.wait()
+        QgsMessageLog.logMessage('thread terminated!','PDALTools', Qgis.Info)
 
     def readline(self, timeout=None):
         try:
@@ -116,6 +131,54 @@ class NonBlockingStreamReader:
                                timeout=timeout)
         except Empty:
             return None
+
+# snipped from:
+# http://eyalarubas.com/python-subproc-nonblock.html
+# tnx to: https://github.com/EyalAr
+# adapted to use QgsTask
+class NonBlockingStreamReader:
+    '''Queue reader to avoid stdout/stderr reading block
+    snipped from:
+    http://eyalarubas.com/python-subproc-nonblock.html
+    tnx to: https://github.com/EyalAr
+    '''
+    def __init__(self, stream):
+        '''
+        stream: the stream to read from.
+                Usually a process' stdout or stderr.
+        '''
+
+        self.task = None
+        self._s = stream
+        self._q = Queue()
+
+        def _populateQueue(task, stream, queue):
+            '''
+            Collect lines from 'stream' and put them in 'quque'.
+            '''
+            while True:
+                line = stream.readline()
+                if line:
+                    queue.put(line)
+                else:
+                    break
+
+        self.task=QgsTask.fromFunction('ReadStreamBuffer', _populateQueue, stream=self._s, queue=self._q)
+        QgsApplication.taskManager().addTask(self.task)
+
+    def readline(self, timeout=None):
+        try:
+            return self._q.get(block=timeout is not None,
+                               timeout=timeout)
+        except Empty:
+            try:
+                if not self.task:
+                    return ''
+                if self.task.status() not in [QgsTask.Complete, QgsTask.Terminated]:
+                    return ''
+            except Exception as ex:
+                QgsMessageLog.logMessage('QgsTask end raised exception: {}'.format(str(ex)),'PDALTools', Qgis.Warning)
+                return None
 
 class UnexpectedEndOfStream(Exception):
     pass
